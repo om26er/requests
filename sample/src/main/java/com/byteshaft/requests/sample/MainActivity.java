@@ -1,21 +1,19 @@
 package com.byteshaft.requests.sample;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
-import com.byteshaft.requests.FormData;
 import com.byteshaft.requests.HttpRequest;
 
-import java.io.File;
-import java.net.HttpURLConnection;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements
-        HttpRequest.OnFileUploadProgressListener, HttpRequest.OnReadyStateChangeListener,
-        HttpRequest.OnErrorListener {
+        HttpRequest.OnReadyStateChangeListener {
 
-    private final String TEST_URL = "http://139.59.228.194:8000/api/user/driver-registration";
+    private static final String API_BASE = "http://localhost:8000/api/%s";
+    private static final String TEST_URL = String.format(API_BASE, "me");
+    private static final String TOKEN = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,53 +21,27 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         HttpRequest request = new HttpRequest(getApplicationContext());
         request.setOnReadyStateChangeListener(this);
-        request.setOnFileUploadProgressListener(this);
-        request.setOnErrorListener(this);
-        request.open("POST", TEST_URL);
+        request.open("PUT", TEST_URL);
+        request.setRequestHeader("Authorization", String.format("Token %s", TOKEN));
         request.send(getData());
     }
 
-    private FormData getData() {
-        FormData data = new FormData();
-        data.append(FormData.TYPE_CONTENT_TEXT, "email", "x@gmail.com");
-        data.append(FormData.TYPE_CONTENT_TEXT, "driving_experience", "NEW");
-        data.append(FormData.TYPE_CONTENT_TEXT, "full_name", "X User");
-        data.append(FormData.TYPE_CONTENT_TEXT, "password", "x11");
-        data.append(FormData.TYPE_CONTENT_TEXT, "phone_number", "911");
-        data.append(FormData.TYPE_CONTENT_TEXT, "transmission_type", "0");
-        data.append(FormData.TYPE_CONTENT_FILE, "doc1", getPath());
-        data.append(FormData.TYPE_CONTENT_FILE, "doc2", getPath());
-        data.append(FormData.TYPE_CONTENT_FILE, "doc3", getPath());
-        return data;
-    }
-
-    private String getPath() {
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        return dirPath + "/ok.png";
+    private String getData() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("last_name", "TTTTTTTT");
+            jsonObject.put("first_name", "UUSUFUS");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject.toString();
     }
 
     @Override
     public void onReadyStateChange(HttpRequest request, int readyState) {
         switch (readyState) {
             case HttpRequest.STATE_DONE:
-                switch (request.getStatus()) {
-                    case HttpURLConnection.HTTP_CREATED:
-                        Toast.makeText(
-                                getApplicationContext(), "success", Toast.LENGTH_SHORT).show();
-                        break;
-                }
+                System.out.println(request.getResponseText());
         }
-    }
-
-    @Override
-    public void onFileUploadProgress(HttpRequest request, File file, long loaded, long total) {
-        if (request.getCurrentFileNumber() == request.getTotalFiles() && loaded == total) {
-            Toast.makeText(getApplicationContext(), "Upload Done", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onError(HttpRequest request, int readyState, short error, Exception exception) {
-
     }
 }
